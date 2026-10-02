@@ -1,0 +1,178 @@
+# ══════════════════════════════════════════════════════════════════════════
+# FreshSense AI — application configuration
+# Every threshold, weight and bound used anywhere in the codebase is declared
+# here. No magic numbers are permitted inside module bodies.
+# ══════════════════════════════════════════════════════════════════════════
+
+application:
+  name: FreshSense AI
+  subtitle: Intelligent Perishable Inventory Intelligence Platform
+  version: 1.0.0
+  organisation: TCS AI Sprint
+  currency_symbol: "₹"
+  locale: en_IN
+  timezone: Asia/Kolkata
+
+database:
+  filename: freshsense.db
+  journal_mode: WAL
+  busy_timeout_ms: 5000
+  foreign_keys: true
+
+data:
+  raw_files:
+    inventory: inventory_raw.csv
+    sales: sales_history_raw.csv
+    orders: orders_raw.csv
+    buyers: buyers_raw.csv
+    sellers: sellers_raw.csv
+  issue_log: data_quality_issue_log.csv
+  # The shipped extract is a snapshot taken on a fixed date. Rebasing
+  # shifts every date column by (today - snapshot_date) so the inventory
+  # remains operationally current however long after capture it is loaded.
+  # Set to false to analyse the snapshot exactly as captured.
+  anchor_snapshot_to_today: true
+  processed_files:
+    inventory: inventory_clean.csv
+    sales: sales_clean.csv
+    orders: orders_clean.csv
+    buyers: buyers_clean.csv
+    sellers: sellers_clean.csv
+
+cleaning:
+  # Plausibility bounds. Values outside these are either nulled (recoverable
+  # sensor faults) or dropped (unrecoverable entry errors).
+  bounds:
+    quantity_available: [0.0, 1000.0]
+    storage_temperature_c: [-5.0, 45.0]
+    humidity_pct: [20.0, 100.0]
+    temp_breach_hours: [0.0, 48.0]
+    unit_price: [0.0, 5000.0]
+  # A recorded zero is treated as a disguised null when the product's median
+  # daily demand exceeds this threshold.
+  false_zero_median_threshold: 20.0
+  cost_price_inflation_factor: 100.0
+  random_seed: 42
+
+features:
+  perishability_score:
+    Low: 1
+    Medium: 2
+    High: 3
+    Very High: 4
+  storage_risk_score:
+    Cold Storage: 1
+    Chilled: 2
+    Ambient: 3
+  breach_critical_hours: 4.0
+  humidity_comfort_ceiling: 70.0
+  at_risk_days: 2
+  low_stock_threshold: 5.0
+
+pricing:
+  # Dynamic decay curve: days_to_expiry -> discount percent
+  decay_discount:
+    0: 70
+    1: 55
+    2: 40
+    3: 30
+  default_discount: 15
+  cost_price_floor_ratio: 0.85
+  max_discount: 75
+  min_discount: 5
+
+grading:
+  grade_a_min_days: 2
+  grade_a_max_risk: 0.35
+  grade_b_min_days: 1
+  grade_b_max_risk: 0.65
+
+forecasting:
+  horizon_days: 14
+  holdout_days: 21
+  fourier_terms: 3
+  ridge_alpha: 1.0
+  confidence_z: 1.28          # ~80% prediction interval
+  min_history_days: 30
+  chennai_climate:
+    annual_mean_temp_c: 30.5
+    amplitude_c: 5.0
+    peak_day_of_year: 105     # mid-April
+
+spoilage:
+  test_size: 0.25
+  n_estimators: 300
+  max_depth: 4
+  learning_rate: 0.07
+  subsample: 0.9
+  colsample_bytree: 0.9
+  decision_threshold: 0.5
+  features:
+    - age_ratio
+    - stock_age_days
+    - shelf_life_days
+    - days_to_expiry
+    - temp_breach_hours
+    - storage_temperature_c
+    - humidity_pct
+    - quantity_available
+    - daily_avg_sales
+    - perishability_score
+    - storage_risk_score
+
+recommendation:
+  # Transparent multi-criteria weights. Exposed as live sliders in the UI.
+  weights:
+    price: 0.35
+    distance: 0.25
+    freshness: 0.20
+    reliability: 0.15
+    quantity: 0.05
+  max_distance_km: 15.0
+  min_order_value: 300.0
+  top_n: 8
+  restock_lookback_days: 30
+  restock_safety_factor: 1.15
+
+rag:
+  chunk_size_sentences: 4
+  chunk_overlap_sentences: 1
+  min_chunk_chars: 80
+  top_k: 4
+  similarity_threshold: 0.12   # below this the assistant refuses to answer
+  collection_name: freshsense_kb
+
+agents:
+  max_steps: 12
+  step_timeout_seconds: 30
+  enable_replanning: true
+  human_confirmation_required: true
+
+monitoring:
+  latency_warn_ms: 1500
+  drift_psi_warn: 0.10
+  drift_psi_alert: 0.25
+  retention_days: 90
+  business:
+    commission_pct: 4.0
+    co2_kg_per_kg_food: 2.5
+
+ui:
+  page_icon: "🥬"
+  layout: wide
+  palette:
+    brand: "#16a34a"
+    accent: "#f59e0b"
+    danger: "#dc2626"
+    info: "#2563eb"
+    purple: "#7c3aed"
+    teal: "#0d9488"
+    ink: "#334155"
+    muted: "#94a3b8"
+  chart_sequence:
+    - "#16a34a"
+    - "#f59e0b"
+    - "#2563eb"
+    - "#dc2626"
+    - "#7c3aed"
+    - "#0d9488"

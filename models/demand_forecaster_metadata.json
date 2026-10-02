@@ -1,0 +1,15 @@
+{
+  "name": "demand_forecaster",
+  "version": "v1.0",
+  "algorithm": "Ridge additive decomposition (trend + Fourier weekly + temperature + festival)",
+  "n_features": 5,
+  "trained_at": "2026-08-12T16:11:27",
+  "n_products": 45,
+  "mean_model_mape": 8.07,
+  "mean_baseline_mape": 10.6,
+  "median_model_mape": 7.61,
+  "mean_model_rmse": 18.33,
+  "mean_model_mase": 0.554,
+  "products_beating_baseline": 40,
+  "pct_beating_baseline": 88.9
+}
